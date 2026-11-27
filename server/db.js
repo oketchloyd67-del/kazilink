@@ -19,7 +19,7 @@ pg.types.setTypeParser(1700, (value) => (value === null ? null : Number(value)))
 fs.mkdirSync(config.uploadsDir, { recursive: true });
 
 // Pre-resolve database hostname to IPv4 to avoid IPv6 connectivity issues on Render
-async function resolveDbHost() {
+export async function resolveDbHost() {
   const dns = await import('node:dns');
   let parsed;
   try {
