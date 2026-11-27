@@ -1,0 +1,48 @@
+{
+  "name": "KaziLink — Earn from your phone",
+  "short_name": "KaziLink",
+  "description": "Earn with daily videos, creator tasks, affiliate marketing, WhatsApp status promotions and Sudoku challenges.",
+  "id": "/app",
+  "lang": "en-KE",
+  "dir": "ltr",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#faf9ff",
+  "theme_color": "#5b3df5",
+  "categories": ["finance", "productivity", "entertainment"],
+  "icons": [
+    { "src": "/icons/favicon-32.png", "sizes": "32x32", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Watch today’s video",
+      "short_name": "Watch",
+      "url": "/app/videos",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Wallet",
+      "short_name": "Wallet",
+      "url": "/app/wallet",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Training Academy",
+      "short_name": "Academy",
+      "url": "/app/training",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Withdrawal leaderboard",
+      "short_name": "Leaderboard",
+      "url": "/app/leaderboard",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

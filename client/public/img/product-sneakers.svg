@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e8f0ea"/><stop offset="1" stop-color="#c7dbcf"/></linearGradient></defs>
+  <rect width="640" height="640" fill="url(#bg)"/>
+  <circle cx="530" cy="130" r="150" fill="#5b8d6e" opacity=".22"/>
+  <path d="M120 430c60-20 95-85 155-110 38-16 70-5 98 14 34 24 73 25 104 41 24 13 33 38 20 55H140c-29 0-39-23-20-40z" fill="#f6f2e9"/>
+  <path d="M120 440h377c10 0 16 8 16 17 0 22-18 33-45 33H170c-40 0-71-9-71-27 0-13 8-23 21-23z" fill="#3f3a33"/>
+  <path d="M250 350c30 8 55 28 82 38l-20 24c-25-10-48-26-74-32z" fill="#b8c8ba"/>
+  <path d="M330 390l35-45 30 16-35 45z" fill="#5b8d6e"/>
+  <text x="320" y="590" text-anchor="middle" font-family="Georgia, serif" font-size="34" fill="#334a3b">Everyday Jute</text>
+</svg>

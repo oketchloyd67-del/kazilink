@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6b56b"/><stop offset=".55" stop-color="#eda09a"/><stop offset="1" stop-color="#8a76ad"/></linearGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4c7b9d"/><stop offset="1" stop-color="#173a55"/></linearGradient>
+  </defs>
+  <rect width="640" height="640" fill="url(#sky)"/>
+  <circle cx="420" cy="250" r="80" fill="#ffe7b3"/>
+  <rect y="380" width="640" height="260" fill="url(#sea)"/>
+  <path d="M0 420c120-25 200 20 320 0s220-30 320 5v90H0z" fill="#2f617f" opacity=".65"/>
+  <path d="M290 500l50-150 50 150z" fill="#f5efe2"/>
+  <path d="M360 500l95-190 15 190z" fill="#e9deca" opacity=".9"/>
+  <path d="M160 470h340l-30 24H190z" fill="#2a2118"/>
+  <text x="320" y="600" text-anchor="middle" font-family="Georgia, serif" font-size="33" fill="#f5efe2">Kilifi Weekend</text>
+</svg>

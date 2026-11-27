@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#5b3df5" />
+    <title>Offline · KaziLink</title>
+    <link rel="icon" href="/icons/favicon.ico" sizes="any" />
+    <style>
+      :root { color-scheme: light; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; min-height: 100dvh; display: grid; place-items: center; padding: 24px;
+        font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif; color: #17122b;
+        background: #f7f5fd;
+        background-image: radial-gradient(circle at 12% -5%, #ebe5ff 0, transparent 38%),
+          radial-gradient(circle at 100% 0, #fdf1e7 0, transparent 34%);
+      }
+      .card {
+        width: min(430px, 100%); background: #fff; border: 1px solid #eae6f5; border-radius: 22px;
+        padding: 28px; text-align: center; box-shadow: 0 18px 44px rgba(45, 27, 110, .09);
+      }
+      .logo { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.03em; margin-bottom: 22px; }
+      .logo img { width: 34px; height: 34px; border-radius: 10px; }
+      .icon {
+        width: 58px; height: 58px; border-radius: 50%; margin: 0 auto 16px;
+        display: grid; place-items: center; background: #fff4e3; color: #a26800; font-size: 26px;
+      }
+      h1 { font-size: 1.4rem; letter-spacing: -.03em; margin: 0 0 8px; }
+      p { color: #77708d; font-size: .9rem; line-height: 1.6; margin: 0 0 20px; }
+      .btn {
+        display: inline-flex; align-items: center; justify-content: center; min-height: 46px;
+        padding: 12px 20px; border-radius: 13px; border: none; cursor: pointer;
+        font: inherit; font-weight: 700; font-size: .92rem; text-decoration: none;
+        background: linear-gradient(135deg, #6a4cff, #4e31dc); color: #fff;
+      }
+      .btn.secondary { background: transparent; border: 1px solid #eae6f5; color: #3b3452; margin-left: 8px; }
+      .tips { text-align: left; margin-top: 22px; padding-top: 18px; border-top: 1px solid #eae6f5; }
+      .tips h2 { font-size: .8rem; margin: 0 0 8px; }
+      .tips ul { margin: 0; padding-left: 18px; color: #77708d; font-size: .8rem; line-height: 1.7; }
+      a:focus-visible, button:focus-visible { outline: 3px solid #8a75ef; outline-offset: 2px; }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <div class="logo"><img src="/img/logo.png" alt="" /> KaziLink</div>
+      <div class="icon" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22.61 16.95A5 5 0 0 0 18 10h-1.26a8 8 0 0 0-7.05-6M5 5a8 8 0 0 0 4 15h9a5 5 0 0 0 1.7-.3" />
+          <line x1="1" y1="1" x2="23" y2="23" />
+        </svg>
+      </div>
+      <h1>You are offline</h1>
+      <p>Pages you already visited still work. New payments and rewards will wait until your connection returns.</p>
+      <button class="btn" type="button" onclick="location.reload()">Try again</button>
+      <a class="btn secondary" href="/app">Open saved app</a>
+      <div class="tips">
+        <h2>Quick fixes</h2>
+        <ul>
+          <li>Turn mobile data or Wi-Fi off and on again.</li>
+          <li>Move to a spot with better signal.</li>
+          <li>Your last saved balance stays visible in the app.</li>
+        </ul>
+      </div>
+    </main>
+  </body>
+</html>
