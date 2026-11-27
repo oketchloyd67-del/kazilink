@@ -206,6 +206,8 @@ export async function connect() {
 
 export async function start() {
   if (startedPromise) return startedPromise;
+  // Resolve database host to IPv4 before connecting
+  await resolveDbHost().catch(() => {});
   startedPromise = connect().then(() => db.exec('SELECT 1'));
   return startedPromise;
 }
