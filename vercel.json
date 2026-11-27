@@ -6,7 +6,7 @@
       "use": "@vercel/static-build",
       "config": {
         "installCommand": "npm ci --include=dev",
-        "buildCommand": "cd client && npx vite build",
+        "buildCommand": "npx vite build --config client/vite.config.js",
         "outputDirectory": "client/dist"
       }
     }
