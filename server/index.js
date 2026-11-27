@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import multer from 'multer';
 import { config } from './config.js';
-import { db, start } from './db.js';
+import { db, start, resolveDbHost } from './db.js';
 import { migrate } from './migrate.js';
 import { seedStatic } from './seed.js';
 import { attachUser } from './services/auth.js';
@@ -24,6 +24,8 @@ import { rateLimit } from './lib/ratelimit.js';
 
 const app = express();
 
+// Resolve database hostname to IPv4 first to avoid IPv6 connectivity issues on Render
+resolveDbHost().catch(() => {});
 
 start().then(() => console.log('[db] connected'), (error) => {
   console.error('[db] connection failed', error);

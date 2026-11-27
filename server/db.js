@@ -18,6 +18,30 @@ pg.types.setTypeParser(1700, (value) => (value === null ? null : Number(value)))
 
 fs.mkdirSync(config.uploadsDir, { recursive: true });
 
+// Pre-resolve database hostname to IPv4 to avoid IPv6 connectivity issues on Render
+async function resolveDbHost() {
+  const dns = await import('node:dns');
+  let parsed;
+  try {
+    parsed = new URL(config.databaseUrl);
+  } catch {
+    return; // Not a valid URL, skip resolution
+  }
+  try {
+    const addresses = await new Promise((resolve, reject) => {
+      dns.resolve4(parsed.hostname, (err, ips) => err ? reject(err) : resolve(ips));
+    });
+    if (addresses.length > 0) {
+      console.log(`[db] resolved ${parsed.hostname} to ${addresses[0]} (IPv4)`);
+      // Override DATABASE_URL with IPv4 address to force pg to use it
+      config.databaseUrl = `postgresql://${parsed.username}:${parsed.password}@${addresses[0]}:${parsed.port || 5432}${parsed.pathname}`;
+      console.log(`[db] using IPv4 connection: ${config.databaseUrl.replace(/:[^:]+@/, ':[password]@')}`);
+    }
+  } catch (e) {
+    console.log(`[db] DNS resolution failed, using hostname directly: ${e.message}`);
+  }
+}
+
 const localPort = (() => { try { const url = new URL(config.databaseUrl); return url.port !== '5432' && url.port !== ''; } catch { return false; } })();
 if (localPort) console.log('[db] non-default db port detected');
 
@@ -37,16 +61,12 @@ function getPool() {
   const sslConfig = config.databaseSsl && !localPort ? { rejectUnauthorized: false } : undefined;
   
   pool = new pg.Pool({
-    host: parsed.hostname,
-    port: parseInt(parsed.port, 10) || 5432,
-    database: parsed.pathname.replace(/^\/+/, ''),
-    user: parsed.username,
-    password: parsed.password,
+    connectionString: config.databaseUrl,
     max: config.dbPoolSize,
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 15_000,
     ssl: sslConfig,
-    connectionParams: { connect_timeout: 15, target_session_attrs: 'any' },
+    connectionParams: { connect_timeout: 15, target_session_attrs: 'any', options: '-c dns_resolution_variant=1' },
   });
   pool.on('error', (error) => console.error('[db] idle client error', error.message));
   pool.on('connect', (client) => client.on('error', (e) => console.error('[db] client error', e.message)));
