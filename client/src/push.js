@@ -16,27 +16,65 @@ export function pushSupported() {
     && 'PushManager' in window;
 }
 
+// True when the app is running as an installed PWA (home screen / desktop app).
+export function isStandalone() {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia?.('(display-mode: standalone)')?.matches
+    || window.navigator.standalone === true
+    || window.matchMedia?.('(display-mode: minimal-ui)')?.matches;
+}
+
+export function isIos() {
+  if (typeof navigator === 'undefined') return false;
+  return /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+async function getRegistration() {
+  const existing = await navigator.serviceWorker.getRegistration();
+  if (existing) return existing;
+  await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+  return navigator.serviceWorker.ready;
+}
+
 export async function enablePush() {
   if (!pushSupported()) {
-    throw new Error('This browser does not support phone notifications. Use Chrome, Edge or an installed Android app.');
+    throw new Error(
+      isIos() && !isStandalone()
+        ? 'On iPhone and iPad, add KaziLink to your Home Screen first, then open it from there to enable notifications.'
+        : 'This browser does not support phone notifications. Use Chrome, Edge or the installed app.',
+    );
   }
   if (Notification.permission === 'denied') {
     throw new Error('Notifications are blocked. Allow them in your browser or phone settings, then try again.');
   }
+
+  // Register the service worker before asking for permission so the
+  // subscription is created against an active worker.
+  const registration = await getRegistration();
   const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
   if (permission !== 'granted') throw new Error('Notification permission was not granted.');
 
-  const registration = await navigator.serviceWorker.register('/sw.js');
-  await navigator.serviceWorker.ready;
   const { publicKey } = await api('/push/public-key');
   if (!publicKey) throw new Error('Notifications are not configured on this server yet.');
 
+  const subscribe = () => registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(publicKey),
+  });
+
   let subscription = await registration.pushManager.getSubscription();
   if (!subscription) {
-    subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(publicKey),
-    });
+    subscription = await subscribe();
+  } else {
+    // A subscription created with an older VAPID key cannot be delivered to.
+    // Re-create it so notifications render instead of silently failing.
+    try {
+      await api('/push/subscribe', { method: 'POST', body: { subscription: subscription.toJSON() } });
+    } catch {
+      await subscription.unsubscribe().catch(() => {});
+      subscription = await subscribe();
+    }
   }
   await api('/push/subscribe', { method: 'POST', body: { subscription: subscription.toJSON() } });
   return subscription;

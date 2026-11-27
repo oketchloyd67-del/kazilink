@@ -1,4 +1,4 @@
-const CACHE = 'kazilink-shell-v4';
+const CACHE = 'kazilink-shell-v5';
 const OFFLINE_URL = '/offline.html';
 const CORE = [
   '/',
@@ -76,36 +76,73 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-self.addEventListener('push', (event) => {
-  let data = { title: 'KaziLink', body: 'You have a new update.', url: '/app' };
+function readPushData(event) {
+  const fallback = { title: 'KaziLink', body: 'You have a new update.', url: '/app' };
+  if (!event.data) return fallback;
   try {
-    if (event.data) data = { ...data, ...event.data.json() };
+    const parsed = event.data.json();
+    if (parsed && typeof parsed === 'object') return { ...fallback, ...parsed };
+  } catch {}
+  try {
+    return { ...fallback, body: event.data.text() };
   } catch {
-    if (event.data) data.body = event.data.text();
+    return fallback;
   }
+}
+
+function safeUrl(value) {
+  try {
+    const url = new URL(value || '/app', self.location.origin);
+    if (url.origin === self.location.origin) return url.pathname + url.search + url.hash;
+  } catch {}
+  return '/app';
+}
+
+self.addEventListener('push', (event) => {
+  const data = readPushData(event);
+  const target = safeUrl(data.url);
+  const title = String(data.title || 'KaziLink').slice(0, 120);
+  const body = String(data.body || '').slice(0, 400);
+  const options = {
+    body,
+    icon: data.icon || '/icons/icon-192.png',
+    badge: '/icons/favicon-32.png',
+    tag: data.tag || 'kazilink-update',
+    renotify: Boolean(data.tag),
+    data: { url: target },
+    dir: 'ltr',
+    lang: 'en-KE',
+    timestamp: Date.now(),
+    vibrate: [80, 40, 80],
+  };
+  if (data.image) options.image = data.image;
   event.waitUntil(
-    self.registration.showNotification(data.title || 'KaziLink', {
-      body: data.body || '',
-      icon: '/icons/icon-192.png',
-      badge: '/icons/favicon-32.png',
-      tag: data.tag || 'kazilink-update',
-      data: { url: data.url || '/app' },
-      vibrate: [80, 40, 80],
-    }),
+    self.registration.showNotification(title, options).catch(() =>
+      // Some browsers reject unknown options (for example renotify on iOS).
+      self.registration.showNotification(title, {
+        body,
+        icon: options.icon,
+        badge: options.badge,
+        tag: options.tag,
+        data: options.data,
+      }),
+    ),
   );
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const target = event.notification.data?.url || '/app';
+  const target = safeUrl(event.notification.data?.url);
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
-      const existing = clients.find((client) => new URL(client.url).origin === self.location.origin);
+      const sameOrigin = clients.filter((client) => {
+        try { return new URL(client.url).origin === self.location.origin; } catch { return false; }
+      });
+      const existing = sameOrigin[0];
       if (existing) {
-        existing.navigate(target);
-        return existing.focus();
+        return existing.navigate(target).then(() => existing.focus()).catch(() => existing.focus());
       }
       return self.clients.openWindow(target);
-    }),
+    }).catch(() => self.clients.openWindow(target)),
   );
 });
