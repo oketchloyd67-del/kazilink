@@ -19,7 +19,7 @@ export function useInstallPrompt() {
       setShowInstallBanner(false);
       setDeferredPrompt(null);
     };
-    window.addEventListener('appinstalled', unloadHandler);
+    window.addEventListener('appinstalled', uninstallHandler);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
