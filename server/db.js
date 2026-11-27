@@ -24,12 +24,29 @@ if (localPort) console.log('[db] non-default db port detected');
 function getPool() {
   if (pool) return pool;
   console.log(`[db] connecting to ${config.databaseUrl.replace(/:[^:]+@/, ':[password]@')}`);
+  
+  // Parse the connection string to force IPv4 and extract components
+  let parsed;
+  try {
+    parsed = new URL(config.databaseUrl);
+  } catch (e) {
+    console.error('[db] invalid DATABASE_URL:', e.message);
+    throw e;
+  }
+  
+  const sslConfig = config.databaseSsl && !localPort ? { rejectUnauthorized: false } : undefined;
+  
   pool = new pg.Pool({
-    connectionString: config.databaseUrl,
+    host: parsed.hostname,
+    port: parseInt(parsed.port, 10) || 5432,
+    database: parsed.pathname.replace(/^\/+/, ''),
+    user: parsed.username,
+    password: parsed.password,
     max: config.dbPoolSize,
     idleTimeoutMillis: 30_000,
-    connectionTimeoutMillis: 10_000,
-    ssl: config.databaseSsl && !localPort ? { rejectUnauthorized: false } : undefined,
+    connectionTimeoutMillis: 15_000,
+    ssl: sslConfig,
+    connectionParams: { connect_timeout: 15, target_session_attrs: 'any' },
   });
   pool.on('error', (error) => console.error('[db] idle client error', error.message));
   pool.on('connect', (client) => client.on('error', (e) => console.error('[db] client error', e.message)));
