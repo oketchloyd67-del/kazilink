@@ -2,12 +2,12 @@
   "version": 2,
   "builds": [
     {
-      "src": "./client/index.html",
+      "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
         "installCommand": "npm ci --include=dev",
-        "buildCommand": "npx vite build --config ./client/vite.config.js",
-        "outputDirectory": "./client/dist"
+        "buildCommand": "npm run build",
+        "outputDirectory": "client/dist"
       }
     }
   ],
