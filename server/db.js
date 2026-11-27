@@ -28,14 +28,20 @@ export async function resolveDbHost() {
     return; // Not a valid URL, skip resolution
   }
   try {
-    const addresses = await new Promise((resolve, reject) => {
-      dns.resolve4(parsed.hostname, (err, ips) => err ? reject(err) : resolve(ips));
+    // Use dns.lookup with family: 4 to force IPv4 resolution via system resolver
+    const result = await new Promise((resolve, reject) => {
+      dns.lookup(parsed.hostname, { family: 4, hints: dns.ADDRCONFIG }, (err, address, family) => {
+        if (err) reject(err);
+        else resolve({ address, family });
+      });
     });
-    if (addresses.length > 0) {
-      console.log(`[db] resolved ${parsed.hostname} to ${addresses[0]} (IPv4)`);
+    if (result && result.family === 4) {
+      console.log(`[db] resolved ${parsed.hostname} to ${result.address} (IPv4)`);
       // Override DATABASE_URL with IPv4 address to force pg to use it
-      config.databaseUrl = `postgresql://${parsed.username}:${parsed.password}@${addresses[0]}:${parsed.port || 5432}${parsed.pathname}`;
+      config.databaseUrl = `postgresql://${parsed.username}:${parsed.password}@${result.address}:${parsed.port || 5432}${parsed.pathname}`;
       console.log(`[db] using IPv4 connection: ${config.databaseUrl.replace(/:[^:]+@/, ':[password]@')}`);
+    } else {
+      console.log(`[db] DNS returned non-IPv4 address (family=${result?.family}), using hostname directly`);
     }
   } catch (e) {
     console.log(`[db] DNS resolution failed, using hostname directly: ${e.message}`);
