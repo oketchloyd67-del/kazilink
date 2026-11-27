@@ -22,7 +22,7 @@ export const config = {
   },
   port: int(process.env.PORT, 4000),
   pgDataDir: process.env.PG_DATA_DIR || '/tmp/pgdata',
-  databaseUrl: process.env.DATABASE_URL || 'postgresql://kazilink:kazilink@localhost:5432/kazilink',
+  databaseUrl: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/postgres',
   dbPoolSize: int(process.env.DB_POOL_SIZE, 10),
   databaseSsl: process.env.DATABASE_SSL === '1',
   dbFile: process.env.DB_FILE || path.join(root, 'data', 'kazilink.db'),

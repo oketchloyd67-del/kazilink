@@ -17,7 +17,6 @@
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "better-sqlite3": "^11.7.0",
     "cookie-parser": "^1.4.6",
     "cross-env": "^7.0.3",
     "dbus-next": "^0.10.2",
@@ -45,10 +44,5 @@
     "request": {
       "form-data": "4.0.4"
     }
-  },
-  "allowScripts": {
-    "better-sqlite3@11.10.0": true,
-    "nodemon@2.0.18": true,
-    "usocket@0.3.0": true
   }
 }
