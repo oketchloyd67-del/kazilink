@@ -32,9 +32,8 @@ export async function resolveDbHost() {
   
   console.log(`[db] attempting DNS resolution for ${parsed.hostname}`);
   
-  // Try multiple DNS resolution methods
+  // Method 1: Try dns.lookup with family: 4 and V4MAPPED
   try {
-    // Method 1: dns.lookup with family: 4
     const lookupResult = await new Promise((resolve, reject) => {
       dns.lookup(parsed.hostname, { family: 4, hints: dns.ADDRCONFIG | dns.V4MAPPED }, (err, address, family) => {
         if (err) reject(err);
@@ -47,13 +46,38 @@ export async function resolveDbHost() {
       console.log(`[db] using IPv4 connection: ${config.databaseUrl.replace(/:[^:]+@/, ':[password]@')}`);
       return;
     }
-    console.log(`[db] lookup returned family=${lookupResult?.family}, attempting next method`);
+    console.log(`[db] lookup returned family=${lookupResult?.family}`);
+  } catch (e) {
+    console.log(`[db] dns.lookup(family=4) failed: ${e.message}`);
+  }
+  
+  // Method 2: Try dns.lookup without family restriction to see what resolves
+  try {
+    const anyResult = await new Promise((resolve, reject) => {
+      dns.lookup(parsed.hostname, (err, address, family) => {
+        if (err) reject(err);
+        else resolve({ address, family });
+      });
+    });
+    console.log(`[db] lookup without family: ${anyResult.address} (family=${anyResult.family})`);
+    if (anyResult.family === 4) {
+      config.databaseUrl = `postgresql://${parsed.username}:${parsed.password}@${anyResult.address}:${originalPort}${parsed.pathname}`;
+      console.log(`[db] using IPv4 connection: ${config.databaseUrl.replace(/:[^:]+@/, ':[password]@')}`);
+      return;
+    }
+    // If we got IPv6, try to convert to IPv4-mapped IPv6 address
+    if (anyResult.family === 6 && anyResult.address.startsWith('::ffff:')) {
+      const ipv4 = anyResult.address.slice(7);
+      config.databaseUrl = `postgresql://${parsed.username}:${parsed.password}@${ipv4}:${originalPort}${parsed.pathname}`;
+      console.log(`[db] using IPv4-mapped address: ${config.databaseUrl.replace(/:[^:]+@/, ':[password]@')}`);
+      return;
+    }
   } catch (e) {
     console.log(`[db] dns.lookup failed: ${e.message}`);
   }
   
+  // Method 3: Try dns.resolve4
   try {
-    // Method 2: dns.resolve4 (direct DNS query)
     const resolveResult = await new Promise((resolve, reject) => {
       dns.resolve4(parsed.hostname, (err, ips) => err ? reject(err) : resolve(ips));
     });
@@ -67,52 +91,32 @@ export async function resolveDbHost() {
     console.log(`[db] dns.resolve4 failed: ${e.message}`);
   }
   
-  // Method 3: Try without family restriction
-  try {
-    const anyResult = await new Promise((resolve, reject) => {
-      dns.lookup(parsed.hostname, (err, address, family) => {
-        if (err) reject(err);
-        else resolve({ address, family });
-      });
-    });
-    console.log(`[db] lookup without family restriction: ${anyResult.address} (family=${anyResult.family})`);
-    if (anyResult.family === 4) {
-      config.databaseUrl = `postgresql://${parsed.username}:${parsed.password}@${anyResult.address}:${originalPort}${parsed.pathname}`;
-      console.log(`[db] using IPv4 connection: ${config.databaseUrl.replace(/:[^:]+@/, ':[password]@')}`);
-      return;
-    }
-  } catch (e) {
-    console.log(`[db] DNS resolution completely failed: ${e.message}`);
-  }
-  
-  // Method 4: Supabase direct endpoint is IPv6-only. Try the shared pooler (port 6543) which supports IPv4
+  // Method 4: Supabase direct endpoint (port 5432) is IPv6-only. 
+  // Try the shared pooler (port 6543) which supports IPv4.
   if (originalPort === 5432) {
-    console.log(`[db] Direct connection (port 5432) is IPv6-only on Supabase.`);
-    console.log(`[db] Attempting to use shared pooler on port 6543 which supports IPv4...`);
+    console.log(`[db] Direct connection (port 5432) appears to be IPv6-only.`);
+    console.log(`[db] Switching to Supabase shared pooler on port 6543 (IPv4-compatible)...`);
+    config.databaseUrl = `postgresql://${parsed.username}:${parsed.password}@${parsed.hostname}:6543${parsed.pathname}`;
+    console.log(`[db] new connection string: ${config.databaseUrl.replace(/:[^:]+@/, ':[password]@')}`);
+    
+    // Try to resolve the hostname again for the pooler
     try {
-      const poolerResult = await new Promise((resolve, reject) => {
+      const poolerLookup = await new Promise((resolve, reject) => {
         dns.lookup(parsed.hostname, { family: 4, hints: dns.ADDRCONFIG }, (err, address, family) => {
           if (err) reject(err);
           else resolve({ address, family });
         });
       });
-      if (poolerResult && poolerResult.family === 4) {
-        config.databaseUrl = `postgresql://${parsed.username}:${parsed.password}@${poolerResult.address}:6543${parsed.pathname}`;
-        console.log(`[db] using pooler IPv4 connection: ${config.databaseUrl.replace(/:[^:]+@/, ':[password]@')}`);
-        return;
+      if (poolerLookup && poolerLookup.family === 4) {
+        config.databaseUrl = `postgresql://${parsed.username}:${parsed.password}@${poolerLookup.address}:6543${parsed.pathname}`;
+        console.log(`[db] pooler IPv4: ${config.databaseUrl.replace(/:[^:]+@/, ':[password]@')}`);
       }
     } catch (e) {
-      console.log(`[db] pooler DNS lookup also failed: ${e.message}`);
+      console.log(`[db] pooler DNS also failed, using hostname directly on port 6543`);
     }
-    // If pooler DNS also fails, try with hostname directly on port 6543
-    console.log(`[db] Trying pooler with hostname (port 6543) directly...`);
-    config.databaseUrl = `postgresql://${parsed.username}:${parsed.password}@${parsed.hostname}:6543${parsed.pathname}`;
-    console.log(`[db] using pooler connection: ${config.databaseUrl.replace(/:[^:]+@/, ':[password]@')}`);
   } else {
-    console.log(`[db] Cannot resolve database hostname. Network configuration issue.`);
-    console.log(`[db] Suggestions:`);
-    console.log(`[db]   - For Supabase: use port 6543 (shared pooler) instead of 5432 (direct)`);
-    console.log(`[db]   - Check Supabase dashboard for IPv4 add-on if direct connection is required`);
+    console.log(`[db] Cannot resolve database hostname: ${e?.message || 'unknown error'}`);
+    console.log(`[db] Network configuration issue - Render may not have DNS access to Supabase.`);
   }
 }
 
