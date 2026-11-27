@@ -133,6 +133,11 @@ function Console({ admin, onLogout }) {
   const [trainingReason, setTrainingReason] = useState('');
   const [trainingBusy, setTrainingBusy] = useState(false);
   const [trainingDelete, setTrainingDelete] = useState(null);
+  const [tumaBaseUrl, setTumaBaseUrl] = useState('');
+  const [tumaApiKey, setTumaApiKey] = useState('');
+  const [tumaAccountId, setTumaAccountId] = useState('');
+  const [tumaBusy, setTumaBusy] = useState(false);
+  const [tumaStatus, setTumaStatus] = useState(null);
   const [supportStatus, setSupportStatus] = useState('open');
   const [supportReply, setSupportReply] = useState(null);
   const [replyText, setReplyText] = useState('');
@@ -291,6 +296,28 @@ function Console({ admin, onLogout }) {
     } finally {
       setBusy('');
     }
+  };
+
+  const saveTuma = async () => {
+    setTumaBusy(true);
+    setTumaStatus(null);
+    try {
+      await api('/admin/settings/tuma', { method: 'PUT', body: { baseUrl: tumaBaseUrl, apiKey: tumaApiKey, accountId: tumaAccountId } });
+      setTumaStatus({ ok: true });
+      setTumaBusy(false);
+      push('Tuma credentials saved.', 'success', 6000);
+    } catch (err) {
+      setTumaStatus({ error: err.message });
+      setTumaBusy(false);
+      push(err.message, 'error', 7000);
+    }
+  };
+
+  const clearTuma = () => {
+    setTumaBaseUrl('');
+    setTumaApiKey('');
+    setTumaAccountId('');
+    setTumaStatus(null);
   };
 
   const openReview = (kind, item, action) => {
@@ -757,6 +784,35 @@ function Console({ admin, onLogout }) {
               </div>
               <div className="mini-note mt-3">
                 Changing the admin password signs out all admin sessions, including this console. Sign in again with the new password.
+              </div>
+            </section>
+            <section className="card">
+              <h2 className="section-title">Tuma payment credentials</h2>
+              <p className="small muted mt-1">Configure the Tuma payment provider for M-Pesa withdrawals and deposits. Credentials are stored securely and never shown in plain text after saving.</p>
+              <div className="stack mt-3">
+                <Field label="API base URL" hint="Tuma API endpoint, usually https://api.tuma.example.com">
+                  <input className="input" type="url" value={tumaBaseUrl} onChange={(e) => setTumaBaseUrl(e.target.value)} placeholder="https://api.tuma.example.com" />
+                </Field>
+                <Field label="API key" hint="Your Tuma API key">
+                  <input className="input" type="password" value={tumaApiKey} onChange={(e) => setTumaApiKey(e.target.value)} placeholder="••••••••••••••••" />
+                </Field>
+                <Field label="Account ID" hint="Tuma account identifier">
+                  <input className="input" type="text" value={tumaAccountId} onChange={(e) => setTumaAccountId(e.target.value)} placeholder="acct_••••••••••" />
+                </Field>
+                <div className="row wrap mt-2">
+                  <button type="button" className="btn btn-primary btn-sm" onClick={saveTuma} disabled={tumaBusy}>
+                    {tumaBusy ? <><Spinner small label="Saving" /> Saving…</> : <><Icon name="check" size={14} /> Save Tuma credentials</>}
+                  </button>
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={clearTuma} disabled={tumaBusy}>Clear</button>
+                </div>
+                {tumaStatus && (
+                  <div className={`mini-note mt-2 ${tumaStatus.ok ? 'success' : 'warn'}`.replace('success', '').replace('warn', 'warn')} role="alert">
+                    {tumaStatus.ok ? 'Tuma credentials saved successfully.' : tumaStatus.error}
+                  </div>
+                )}
+                <div className="mini-note mt-2">
+                  When configured, payments are processed through Tuma. The admin <strong>Payments</strong> tab shows all payment records including Tuma transaction references.
+                </div>
               </div>
             </section>
             <section className="card">

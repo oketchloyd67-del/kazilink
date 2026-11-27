@@ -413,4 +413,37 @@ router.get('/vouchers', wrap(async (_req, res) => {
   res.json({ vouchers: rows });
 }));
 
+router.put('/settings/tuma', wrap(async (req, res) => {
+  const baseUrl = String(req.body?.baseUrl || '').trim();
+  const apiKey = String(req.body?.apiKey || '').trim();
+  const accountId = String(req.body?.accountId || '').trim();
+  
+  if (baseUrl && (!apiKey || !accountId)) {
+    throw new HttpError(400, 'API key and account ID are required when setting a base URL.');
+  }
+  if (!baseUrl && (apiKey || accountId)) {
+    throw new HttpError(400, 'Clear the base URL to remove API key and account ID.');
+  }
+  
+  // Save to app_settings
+  if (baseUrl) {
+    db.prepare('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)').run('tuma_base_url', baseUrl);
+    db.prepare('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)').run('tuma_api_key', apiKey);
+    db.prepare('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)').run('tuma_account_id', accountId);
+  } else {
+    db.prepare('DELETE FROM app_settings WHERE key = ?').run('tuma_base_url');
+    db.prepare('DELETE FROM app_settings WHERE key = ?').run('tuma_api_key');
+    db.prepare('DELETE FROM app_settings WHERE key = ?').run('tuma_account_id');
+  }
+  
+  res.json({ ok: true, message: 'Tuma settings updated.' });
+}));
+
+router.get('/settings/tuma', wrap(async (_req, res) => {
+  const baseUrl = db.prepare('SELECT value FROM app_settings WHERE key = ?').get('tuma_base_url')?.value || '';
+  const accountId = db.prepare('SELECT value FROM app_settings WHERE key = ?').get('tuma_account_id')?.value || '';
+  // Don't return the API key for security
+  res.json({ baseUrl, accountId });
+}));
+
 export default router;

@@ -6,6 +6,7 @@ import { formatKes, initials, timeAgo } from '../lib.js';
 import { enablePush, notificationState, pushSupported } from '../push.js';
 import { Icon, Modal, Spinner, useToast } from './ui.jsx';
 import { LegalLinks } from './Global.jsx';
+import { InstallBanner } from './InstallBanner.jsx';
 
 export const FEATURES = [
   { key: 'videos', path: '/app/videos', label: 'Watch & earn', desc: 'Daily video plus creator tasks', icon: 'play', color: '#5b3df5', bg: '#f0edff' },
@@ -204,6 +205,7 @@ export default function Shell() {
         </header>
 
         <main className="page" id="main" tabIndex={-1}>
+          <InstallBanner />
           {showPushPrompt && (
             <div className="push-prompt" role="status">
               <div className="push-prompt-icon"><Icon name="bell" size={18} /></div>

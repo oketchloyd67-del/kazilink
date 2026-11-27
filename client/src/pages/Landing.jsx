@@ -115,7 +115,7 @@ export default function Landing() {
       </main>
 
       <footer style={{ padding: '22px 24px', borderTop: '1px solid var(--line)', textAlign: 'center' }} className="tiny muted">
-        © {new Date().getFullYear()} KaziLink · Built for Kenyan hustlers · <Link to="/admin" style={{ color: 'var(--brand)' }}>Admin</Link>
+        © {new Date().getFullYear()} KaziLink · Built for Kenyan hustlers
       </footer>
     </div>
   );

@@ -472,10 +472,30 @@ img, video { max-width: 100%; }
 .quick-action:hover { background: #fbfaff; border-color: #dcd4f7; }
 .quick-action svg { color: var(--brand); }
 .quick-action.locked svg { color: #b7aebf; }
-.install-banner { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 13px 15px; }
-.install-banner .grow { min-width: 0; }
-.install-banner strong { font-size: .82rem; display: block; }
-.install-banner span { font-size: .72rem; color: var(--muted); }
+.install-banner {
+  display: flex; align-items: center; gap: 12px; background: #fff;
+  border: 1px solid var(--line); border-radius: 16px; padding: 13px 15px;
+  box-shadow: var(--shadow); margin: 0 28px 16px; position: relative; z-index: 10;
+}
+.install-banner .icon-wrap { width: 38px; height: 38px; border-radius: 10px; background: var(--brand-soft); color: var(--brand); display: grid; place-items: center; flex: none; }
+.install-banner .install-text { flex: 1; min-width: 0; }
+.install-banner .install-text strong { font-size: .82rem; display: block; }
+.install-banner .install-text span { font-size: .72rem; color: var(--muted); }
+.install-banner .install-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.install-banner .install-actions .btn { padding: 7px 12px; font-size: .74rem; }
+@media (max-width: 880px) { .install-banner { margin: 0 16px 12px; } }
+@media (max-width: 560px) { .install-banner { flex-wrap: wrap; }
+  .install-banner .install-actions { width: 100%; justify-content: flex-end; margin-top: 4px; }
+}
+
+.install-hint {
+  display: flex; align-items: center; gap: 8px; padding: 8px 14px;
+  background: var(--brand-soft); border-radius: 99px; font-size: .72rem; color: var(--brand-dark);
+  position: fixed; bottom: calc(84px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+  z-index: 60; box-shadow: var(--shadow);
+}
+.install-hint .install-hint-btn { background: var(--brand); color: #fff; border: none; padding: 4px 10px; border-radius: 99px; font-size: .68rem; font-weight: 700; margin-left: 6px; }
+.install-hint .install-hint-btn:hover { background: var(--brand-dark); }
 .loading-screen { min-height: 100dvh; display: grid; place-items: center; }
 .spinner { width: 26px; height: 26px; border-radius: 50%; border: 2.5px solid #e2dcf4; border-top-color: var(--brand); animation: spin .7s linear infinite; }
 .spinner.sm { width: 16px; height: 16px; border-width: 2px; }
